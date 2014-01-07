@@ -115,7 +115,7 @@ var HttpRequest = function (c) {
     * @private
     */
     var cfg = {
-        method: 'post',
+        method: 'POST',
         async: true,
         dataType: 'json',
         contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
@@ -234,6 +234,7 @@ var HttpRequest = function (c) {
 
             case 'PUT':
             case 'POST':
+            case 'PATCH':
             case 'DELETE':
                 http.open(method, url, cfg.async);
                 http.onreadystatechange = OnStateChange;

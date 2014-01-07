@@ -166,7 +166,7 @@ var HttpRequest = function (c) {
                 cfg.onSucess(obj);
             }
             else {
-                cfg.onFail(http.status, http.statusText);
+                cfg.onFail(http.status, http.statusText, http.response);
             }
             cfg.onComplete();
         }

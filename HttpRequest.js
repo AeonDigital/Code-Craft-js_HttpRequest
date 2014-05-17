@@ -241,10 +241,9 @@ var HttpRequest = function (c) {
 
                 if (params !== undefined && params !== null) {
                     http.setRequestHeader("Content-type", cfg.contentType);
-                    http.setRequestHeader("Content-length", params.length);
-                    http.setRequestHeader("Connection", "close");
                 }
                 else { params = null; }
+                
                 http.send(params);
                 break;
         }

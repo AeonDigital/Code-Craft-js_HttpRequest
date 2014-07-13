@@ -14,54 +14,10 @@
 
 
 
-
-
-
-
-
-
-
-
-/** 
-* Cria instâncias com capacidade de efetuarem requisições HTTP
-*
-* @class HttpRequest
-*
-* @global
-*
-* @type {Class}
-*
-* @property {Function}                      Load                                Efetua uma requisição para o endereço informado.
-*/
-
-
-
-
-
-
-
-
-
-/**
-* Configurações para requisições assíncronas.
-*
-* @typedef HttpConfig
-*
-* @global
-*
-* @property {String}                        method                              Método de requisição [post|get].
-* @property {Boolean}                       async                               Use "true" para requisições assíncronas.
-* @property {String}                        dataType                            Tipo de objeto esperado como resposta [json|text|xml].
-* @property {String}                        contentType                         Tipo de dados que serão enviados para o servidor.
-* @property {Function}                      onSucess                            Evento disparado quando uma requisição é bem sucedida.
-* @property {Function}                      onComplete                          Evento que ocorre SEMPRE ao final da requisição.
-* @property {Function}                      onTimeout                           Evento que ocorre quando a operação exceder o tempo de resposta.
-* @property {Function}                      onFail                              Evento disparado quando ocorrer algum erro na requisição.
-* @property {Integer}                       timeout                             Tempo de espera até encerrar a requisição por timeout.
-*/
-
-
-
+// --------------------
+// Caso não exista, inicia objeto CodeCraft
+var CodeCraft = (CodeCraft || function () { });
+if(typeof(CodeCraft) === 'function') { CodeCraft = new CodeCraft(); };
 
 
 
@@ -73,11 +29,55 @@
 *
 * @constructs
 *
-* @memberof HttpRequest
+* @memberof CodeCraft
 *
 * @param {HttpConfig}                       [c]                                 Objeto contendo as configurações para as requisições.
 */
-var HttpRequest = function (c) {
+CodeCraft.HttpRequest = function (c) {
+
+
+
+
+
+    /** 
+    * Cria instâncias com capacidade de efetuarem requisições HTTP.
+    *
+    * @class HttpRequest
+    *
+    * @memberof CodeCraft
+    *
+    * @type {Class}
+    *
+    * @property {Function}                      Load                                Efetua uma requisição para o endereço informado.
+    */
+
+
+
+
+
+    /**
+    * Configurações para requisições assíncronas.
+    *
+    * @typedef HttpConfig
+    *
+    * @memberof CodeCraft
+    *
+    * @property {String}                        method                              Método de requisição [post|get].
+    * @property {Boolean}                       async                               Use "true" para requisições assíncronas.
+    * @property {String}                        dataType                            Tipo de objeto esperado como resposta [json|text|xml].
+    * @property {String}                        contentType                         Tipo de dados que serão enviados para o servidor.
+    * @property {Function}                      onSucess                            Evento disparado quando uma requisição é bem sucedida.
+    * @property {Function}                      onComplete                          Evento que ocorre SEMPRE ao final da requisição.
+    * @property {Function}                      onTimeout                           Evento que ocorre quando a operação exceder o tempo de resposta.
+    * @property {Function}                      onFail                              Evento disparado quando ocorrer algum erro na requisição.
+    * @property {Integer}                       timeout                             Tempo de espera até encerrar a requisição por timeout.
+    */
+
+
+
+
+
+
 
 
 
@@ -104,7 +104,6 @@ var HttpRequest = function (c) {
     */
     var evtTimeout = null;
 
-
     /**
     * Configurações básicas para requisições assíncronas
     *
@@ -123,13 +122,18 @@ var HttpRequest = function (c) {
         onComplete: function () { },
         onTimeout: function () { },
         onFail: function (statusCode, statusText) {
-            alert('Erro na requisição.\nCode : ' + statusCode + '\nError : ' + statusText);
+            alert('Request fail.\nCode : ' + statusCode + '\nError : ' + statusText);
         },
         timeout: 15000
     };
 
     // Efetua mescla dos dados informados pelo desenvolvedor com os padrões
     if (c !== undefined) { for (var it in c) { cfg[it] = c[it]; } }
+
+
+
+
+
 
 
 
@@ -172,6 +176,10 @@ var HttpRequest = function (c) {
         }
     };
 
+
+
+
+
     /**
     * Aborta a requisição e chama o evento onTimeout.
     * 
@@ -204,7 +212,7 @@ var HttpRequest = function (c) {
     * @param {String}           [params]    Parametros no formato QueryString : param1=value1&param2=value2
     */
     this.Load = function (url, params) {
-        
+
         // Verifica o método que será utilizado
         var method = cfg.method.toUpperCase();
         if (url.indexOf(' ') != -1) {
@@ -243,12 +251,15 @@ var HttpRequest = function (c) {
                     http.setRequestHeader("Content-type", cfg.contentType);
                 }
                 else { params = null; }
-                
+
                 http.send(params);
                 break;
         }
 
         evtTimeout = setTimeout(AbortOnTimeout, cfg.timeout);
     };
+
+
+
 
 };

@@ -3,13 +3,11 @@
 * @pdesc Conjunto de soluções front-end.
 *
 * @module HttpRequest
-* @file Classe HttpRequest.
+* @file HttpRequest.
 *
 * @author Rianna Cantarelli <rianna.aeon@gmail.com>
 */
-
-
-
+'use strict';
 
 
 
@@ -18,6 +16,11 @@
 // Caso não exista, inicia objeto CodeCraft
 var CodeCraft = (CodeCraft || function () { });
 if(typeof(CodeCraft) === 'function') { CodeCraft = new CodeCraft(); };
+
+
+
+
+
 
 
 
@@ -48,7 +51,7 @@ CodeCraft.HttpRequest = function (c) {
     *
     * @type {Class}
     *
-    * @property {Function}                      Load                                Efetua uma requisição para o endereço informado.
+    * @property {Function}                      Load                            Efetua uma requisição para o endereço informado.
     */
 
 
@@ -62,7 +65,7 @@ CodeCraft.HttpRequest = function (c) {
     *
     * @memberof CodeCraft
     *
-    * @property {String}                        method                              Método de requisição [post|get].
+    * @property {String}                        method                              Método de requisição [post|get|...].
     * @property {Boolean}                       async                               Use "true" para requisições assíncronas.
     * @property {String}                        dataType                            Tipo de objeto esperado como resposta [json|text|xml].
     * @property {String}                        contentType                         Tipo de dados que serão enviados para o servidor.
@@ -77,6 +80,14 @@ CodeCraft.HttpRequest = function (c) {
 
 
 
+
+
+
+
+
+    /*
+    * PROPRIEDADES PRIVADAS
+    */
 
 
 
@@ -105,7 +116,7 @@ CodeCraft.HttpRequest = function (c) {
     var evtTimeout = null;
 
     /**
-    * Configurações básicas para requisições assíncronas
+    * Configurações padrão para requisições assíncronas
     *
     * @type {HttpConfig}
     *
@@ -122,7 +133,7 @@ CodeCraft.HttpRequest = function (c) {
         onComplete: function () { },
         onTimeout: function () { },
         onFail: function (statusCode, statusText) {
-            alert('Request fail.\nCode : ' + statusCode + '\nError : ' + statusText);
+            console.log('Request fail.\nCode : ' + statusCode + '\nError : ' + statusText);
         },
         timeout: 15000
     };
@@ -134,6 +145,14 @@ CodeCraft.HttpRequest = function (c) {
 
 
 
+
+
+
+
+
+    /*
+    * MÉTODOS PRIVADAS
+    */
 
 
 
@@ -155,12 +174,17 @@ CodeCraft.HttpRequest = function (c) {
             clearTimeout(evtTimeout);
             var status = http.status;
 
+            // Se o status apresenta código de sucesso na requisição...
             if (status == 0 || (status >= 200 && status < 300) || (status == 304 || status == 1223)) {
                 var obj = http.responseText;
                 switch (cfg.dataType) {
                     case 'json':
                         try { obj = eval('(' + obj + ')'); }
-                        catch (e) { obj = null; }
+                        catch (e) {
+                            console.log('Expected object fail to parse:');
+                            console.log(obj);
+                            obj = null;
+                        }
                         break;
                     case 'xml':
                         var parser = new DOMParser();
@@ -199,67 +223,88 @@ CodeCraft.HttpRequest = function (c) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     /**
-    * Efetua uma requisição para o endereço informado.
-    * 
-    * @function Load
-    *
-    * @memberof HttpRequest
-    *
-    * @param {String}           url         Endereço URI da requisição.
-    *                                       Um método pode ser especificado no inicio da url usando o formato:
-    *                                       METHOD url      ex :    DELETE /application/User/99
-    * @param {String}           [params]    Parametros no formato QueryString : param1=value1&param2=value2
+    * OBJETO PÚBLICO QUE SERÁ EXPOSTO.
     */
-    this.Load = function (url, params) {
+    var _public = this.Control = {
+        /**
+        * Efetua uma requisição para o endereço informado.
+        * 
+        * @function Load
+        *
+        * @memberof HttpRequest
+        *
+        * @param {String}               url         Endereço URI da requisição.
+        *                                           Um método pode ser especificado no inicio da url usando o formato:
+        *                                           METHOD url      ex :    DELETE /application/User/99
+        * @param {Object|String}        [data]      Informações que serão enviadas para o servidor.
+        *                                           Para "GET" este parametro não deve ser utilizado.
+        */
+        Load: function (url, data) {
+            // Verifica o método que será utilizado
+            var method = cfg.method.toUpperCase();
+            if (url.indexOf(' ') != -1) {
+                var spl = url.split(' ');
 
-        // Verifica o método que será utilizado
-        var method = cfg.method.toUpperCase();
-        if (url.indexOf(' ') != -1) {
-            var spl = url.split(' ');
+                method = spl[0].toUpperCase();
+                url = spl[1];
+            }
 
-            method = spl[0].toUpperCase();
-            url = spl[1];
+
+            // Caso seja uma url relativa, completa o endereço com o protocolo e dominio
+            if (url.indexOf('://') == -1) {
+                var port = (window.location.port) ? ':' + window.location.port : '';
+                url = (url.indexOf('/') == 0) ? url.substring(1) : url;
+                url = window.location.protocol + '//' + window.location.hostname + port + '/' + url;
+            }
+
+            switch (method) {
+                case 'GET':
+                    http.open(method, url, cfg.async);
+                    http.onreadystatechange = OnStateChange;
+                    http.send(null);
+
+                    break;
+
+                case 'PUT':
+                case 'POST':
+                case 'PATCH':
+                case 'DELETE':
+                    http.open(method, url, cfg.async);
+                    http.onreadystatechange = OnStateChange;
+
+                    if (data !== undefined && data !== null) {
+                        http.setRequestHeader("Content-type", cfg.contentType);
+                    }
+                    else { data = null; }
+
+
+                    http.send("requestData=" + JSON.stringify(data));
+                    break;
+            }
+
+            evtTimeout = setTimeout(AbortOnTimeout, cfg.timeout);
         }
-
-
-        // Caso seja uma url relativa, completa o endereço com o protocolo e dominio
-        if (url.indexOf('://') == -1) {
-            var port = (window.location.port) ? ':' + window.location.port : '';
-            url = (url.indexOf('/') == 0) ? url.substring(1) : url;
-            url = window.location.protocol + '//' + window.location.hostname + port + '/' + url;
-        }
-
-        switch (method) {
-            case 'GET':
-                if (params !== undefined) { url += '?' + params; }
-
-                http.open(method, url, cfg.async);
-                http.onreadystatechange = OnStateChange;
-                http.send(null);
-
-                break;
-
-            case 'PUT':
-            case 'POST':
-            case 'PATCH':
-            case 'DELETE':
-                http.open(method, url, cfg.async);
-                http.onreadystatechange = OnStateChange;
-
-                if (params !== undefined && params !== null) {
-                    http.setRequestHeader("Content-type", cfg.contentType);
-                }
-                else { params = null; }
-
-                http.send(params);
-                break;
-        }
-
-        evtTimeout = setTimeout(AbortOnTimeout, cfg.timeout);
     };
 
 
 
 
+
+
+    return _public;
 };

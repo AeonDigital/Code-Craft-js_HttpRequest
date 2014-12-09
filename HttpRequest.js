@@ -251,8 +251,10 @@ CodeCraft.HttpRequest = function (c) {
         * @param {String}               url         Endereço URI da requisição.
         *                                           Um método pode ser especificado no inicio da url usando o formato:
         *                                           METHOD url      ex :    DELETE /application/User/99
-        * @param {Object|String}        [data]      Informações que serão enviadas para o servidor.
-        *                                           Para "GET" este parametro não deve ser utilizado.
+        * @param {String}               [data]      String com dados que serão enviados para o servidor.
+        *                                           Utilize o formato querystring; prop1=val1&prop2=val2
+        *                                           Use encodeURIComponent() para corrigir valores permitindo que os caracteres especiais
+        *                                           não causem falha ao serem enviados.
         */
         Load: function (url, data) {
             // Verifica o método que será utilizado
@@ -293,7 +295,7 @@ CodeCraft.HttpRequest = function (c) {
                     else { data = null; }
 
 
-                    http.send("requestData=" + JSON.stringify(data));
+                    http.send(data);
                     break;
             }
 

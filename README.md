@@ -37,6 +37,7 @@ Ao criar uma instância os seguintes atributos internos podem ser configurados.
 
 
 * `Load`                    : Efetua uma requisição para o endereço informado.
+* `Upload`                  : Envia arquivos para o endereço informado.
 
 
 **Importante**

@@ -242,13 +242,13 @@ CodeCraft.HttpRequest = function (c) {
     */
     var _public = this.Control = {
         /**
-        * Efetua uma requisição para o endereço informado.
+        * Efetua uma requisição para o URL informado.
         * 
         * @function Load
         *
         * @memberof HttpRequest
         *
-        * @param {String}               url         Endereço URI da requisição.
+        * @param {String}               url         Endereço URL da requisição.
         *                                           Um método pode ser especificado no inicio da url usando o formato:
         *                                           METHOD url      ex :    DELETE /application/User/99
         * @param {String}               [data]      String com dados que serão enviados para o servidor.
@@ -275,7 +275,11 @@ CodeCraft.HttpRequest = function (c) {
             }
 
             switch (method) {
+                case 'HEAD':
                 case 'GET':
+                    if (data != undefined && data !== null && data !== '') {
+                        url = url + '?' + data;
+                    }
                     http.open(method, url, cfg.async);
                     http.onreadystatechange = OnStateChange;
                     http.send(null);
@@ -286,10 +290,13 @@ CodeCraft.HttpRequest = function (c) {
                 case 'POST':
                 case 'PATCH':
                 case 'DELETE':
+                case 'OPTIONS':
+                case 'TRACE':
+                case 'CONNECT':
                     http.open(method, url, cfg.async);
                     http.onreadystatechange = OnStateChange;
 
-                    if (data !== undefined && data !== null) {
+                    if (data !== undefined && data !== null && cfg.contentType !== false) {
                         http.setRequestHeader("Content-type", cfg.contentType);
                     }
                     else { data = null; }
@@ -298,6 +305,46 @@ CodeCraft.HttpRequest = function (c) {
                     http.send(data);
                     break;
             }
+
+            evtTimeout = setTimeout(AbortOnTimeout, cfg.timeout);
+        },
+        /**
+        * Efetua o envio dos arquivos definidos para o URL alvo.
+        * 
+        * @function Upload
+        *
+        * @memberof HttpRequest
+        *
+        * @param {String}               url         Endereço URL para o upload.
+        *                                           Os métodos que comumente devem ser usados para o upload de arquivos 
+        *                                           são POST e PUT
+        * @param {FormData}             data        Objeto "FormData" contendo todo o conteúdo de arquivos e demais
+        *                                           informações que devem ser enviadas para a URL alvo.
+        */
+        Upload: function (url, data) {
+            
+            // Verifica o método que será utilizado
+            var method = cfg.method.toUpperCase();
+            if (url.indexOf(' ') != -1) {
+                var spl = url.split(' ');
+
+                method = spl[0].toUpperCase();
+                url = spl[1];
+            }
+
+
+            // Caso seja uma url relativa, completa o endereço com o protocolo e dominio
+            if (url.indexOf('://') == -1) {
+                var port = (window.location.port) ? ':' + window.location.port : '';
+                url = (url.indexOf('/') == 0) ? url.substring(1) : url;
+                url = window.location.protocol + '//' + window.location.hostname + port + '/' + url;
+            }
+
+
+
+            http.open(method, url, cfg.async);
+            http.onreadystatechange = OnStateChange;
+            http.send(data);
 
             evtTimeout = setTimeout(AbortOnTimeout, cfg.timeout);
         }

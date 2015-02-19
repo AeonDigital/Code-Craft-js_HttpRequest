@@ -223,6 +223,50 @@ CodeCraft.HttpRequest = function (c) {
 
 
 
+    /**
+    * Converte um objeto JSON para uma string no formato QueryString [prop1=val1&prop2=val2]
+    *
+    * @param {JSON}     json                Objeto JSON que será convertido.
+    *
+    * @return {String}
+    */
+    var jsonToQueryString = function (json) {
+        var strReturn = "";
+
+        for (var it in json) {
+            if (strReturn != "") { strReturn += "&"; }
+            strReturn += it + "=" + encodeURIComponent(json[it]);
+        }
+
+        return strReturn;
+    };
+
+
+
+
+
+    /**
+    * Converte um objeto JSON para uma string no formato QueryString [prop1=val1&prop2=val2]
+    *
+    * @param {JSON}     headers             Um objeto JSON contendo pares { key : value } onde
+    *                                       "key" é o nome de um header a ser enviado junto na requisição e 
+    *                                       "value" é o respectivo valor do header.
+    *
+    * @return {String}
+    */
+    var setHeadersOnRequest = function (headers) {
+        if (headers !== undefined && headers !== null) {
+            for (var it in headers) {
+                http.setRequestHeader(it.toString(), headers[it]);
+            }
+        }
+    };
+
+
+
+
+
+
 
 
 
@@ -251,12 +295,16 @@ CodeCraft.HttpRequest = function (c) {
         * @param {String}               url         Endereço URL da requisição.
         *                                           Um método pode ser especificado no inicio da url usando o formato:
         *                                           METHOD url      ex :    DELETE /application/User/99
-        * @param {String}               [data]      String com dados que serão enviados para o servidor.
+        * @param {String|JSON}          [data]      Objeto JSON ou
+        *                                           String com dados que serão enviados para o servidor.
         *                                           Utilize o formato querystring; prop1=val1&prop2=val2
         *                                           Use encodeURIComponent() para corrigir valores permitindo que os caracteres especiais
         *                                           não causem falha ao serem enviados.
+        * @param {JSON}                 [headers]   Um objeto JSON contendo pares { key : value } onde
+        *                                           "key" é o nome de um header a ser enviado junto na requisição e 
+        *                                           "value" é o respectivo valor do header.
         */
-        Load: function (url, data) {
+        Load: function (url, data, headers) {
             // Verifica o método que será utilizado
             var method = cfg.method.toUpperCase();
             if (url.indexOf(' ') != -1) {
@@ -274,6 +322,12 @@ CodeCraft.HttpRequest = function (c) {
                 url = window.location.protocol + '//' + window.location.hostname + port + '/' + url;
             }
 
+
+            // Verifica o formato do parametro "data".
+            // se não for uma string, converte o objeto em uma querystring
+            data = (data === null) ? null : ((typeof (data) === 'string') ? data : jsonToQueryString(data));
+
+
             switch (method) {
                 case 'HEAD':
                 case 'GET':
@@ -282,6 +336,9 @@ CodeCraft.HttpRequest = function (c) {
                     }
                     http.open(method, url, cfg.async);
                     http.onreadystatechange = OnStateChange;
+
+
+                    setHeadersOnRequest(headers);
                     http.send(null);
 
                     break;
@@ -301,12 +358,14 @@ CodeCraft.HttpRequest = function (c) {
                     }
                     else { data = null; }
 
-
+                    setHeadersOnRequest(headers);
                     http.send(data);
                     break;
             }
 
-            evtTimeout = setTimeout(AbortOnTimeout, cfg.timeout);
+            if (cfg.async) {
+                evtTimeout = setTimeout(AbortOnTimeout, cfg.timeout);
+            }
         },
         /**
         * Efetua o envio dos arquivos definidos para o URL alvo.
@@ -320,9 +379,12 @@ CodeCraft.HttpRequest = function (c) {
         *                                           são POST e PUT
         * @param {FormData}             data        Objeto "FormData" contendo todo o conteúdo de arquivos e demais
         *                                           informações que devem ser enviadas para a URL alvo.
+        * @param {JSON}                 [headers]   Um objeto JSON contendo pares { key : value } onde
+        *                                           "key" é o nome de um header a ser enviado junto na requisição e 
+        *                                           "value" é o respectivo valor do header.
         */
-        Upload: function (url, data) {
-            
+        Upload: function (url, data, headers) {
+
             // Verifica o método que será utilizado
             var method = cfg.method.toUpperCase();
             if (url.indexOf(' ') != -1) {
@@ -344,6 +406,8 @@ CodeCraft.HttpRequest = function (c) {
 
             http.open(method, url, cfg.async);
             http.onreadystatechange = OnStateChange;
+
+            setHeadersOnRequest(headers);
             http.send(data);
 
             evtTimeout = setTimeout(AbortOnTimeout, cfg.timeout);

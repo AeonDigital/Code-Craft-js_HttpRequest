@@ -187,13 +187,8 @@ CodeCraft.HttpRequest = function (c) {
                         }
                         break;
                     case 'xml':
-                        try {
-                            var parser = new DOMParser();
-                            obj = parser.parseFromString(obj, "text/xml");
-                        }
-                        catch(e) {
-                            console.log(http.responseText);
-                        }
+                        var parser = new DOMParser();
+                        obj = parser.parseFromString(obj, "text/xml");
                         break;
                 }
                 cfg.onSucess(obj);

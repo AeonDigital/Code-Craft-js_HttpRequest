@@ -73,6 +73,12 @@ CodeCraft.HttpRequest = function (c) {
     * @property {Function}                      onComplete                          Evento que ocorre SEMPRE ao final da requisição.
     * @property {Function}                      onTimeout                           Evento que ocorre quando a operação exceder o tempo de resposta.
     * @property {Function}                      onFail                              Evento disparado quando ocorrer algum erro na requisição.
+    *
+    * @property {Function}                      onUpdateProgress                    Evento que monitora o progresso de um upload.
+    * @property {Function}                      onUpdateTransferComplete            Evento que ocorre ao final do upload.
+    * @property {Function}                      onUpdateTransferFail                Evento que ocorre caso o upload falhe.
+    * @property {Function}                      onUpdateTransferCanceled            Evento que ocorre quando o upload é cancelado
+    *
     * @property {Integer}                       timeout                             Tempo de espera até encerrar a requisição por timeout.
     */
 
@@ -134,7 +140,11 @@ CodeCraft.HttpRequest = function (c) {
         onTimeout: function () { },
         onFail: function (statusCode, statusText) {
             console.log('Request fail.\nCode : ' + statusCode + '\nError : ' + statusText);
-        },
+        }, 
+        onUpdateProgress: function(e) {},
+        onUpdateTransferComplete: function(e) {},
+        onUpdateTransferFail: function(e) {},
+        onUpdateTransferCanceled: function(e) {},
         timeout: 15000
     };
 
@@ -403,6 +413,14 @@ CodeCraft.HttpRequest = function (c) {
             }
 
 
+
+            // Define métodos especiais de monitoramento do upload
+            http.upload.addEventListener('progress', cfg.onUpdateProgress);
+            http.upload.addEventListener('load', cfg.onUpdateTransferComplete);
+            http.upload.addEventListener('error', cfg.onUpdateTransferFail);
+            http.upload.addEventListener('abort', cfg.onUpdateTransferCanceled);
+            
+               
 
             http.open(method, url, cfg.async);
             http.onreadystatechange = OnStateChange;
